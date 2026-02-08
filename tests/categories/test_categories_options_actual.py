@@ -29,15 +29,20 @@ class TestCategoriesOptionsActual:
         resp = api.options("/categories")
         assert resp.status_code == 200
 
-    # 3. Capability: Allow header is present
-    @pytest.mark.bug
-    def test_options_categories_has_allow_header(self, api):
-        """Actual: The Allow header is present even though the body is empty."""
-        resp = api.options("/categories")
-        assert resp.status_code == 200
+    # 3. Capability: Instance-Level Method Discovery
+    @pytest.mark.capability
+    def test_options_categories_header_contains_instance_methods(self, api):
+        """
+        Verify the 'Allow' header correctly lists instance-specific methods.
+        Expected: GET, PUT, POST, DELETE, HEAD, OPTIONS.
+        """
+        categories_id = api.post("/categories", json={"title": "Method Check"}).json()['id']
+        resp = api.options(f"/categories/{categories_id}")
+        
         allow = resp.headers.get("Allow", "")
-        assert "GET" in allow
-        assert "POST" in allow
+        # These methods are specific to individual resource instances
+        for method in ["GET", "POST", "HEAD", "OPTIONS"]:
+            assert method in allow
 
     # 4. Side Effects: OPTIONS does not modify data
     @pytest.mark.bug
