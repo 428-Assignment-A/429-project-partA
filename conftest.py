@@ -89,3 +89,27 @@ def pytest_itemcollected(item):
     if markers:
         # Appends [marker1, marker2] to the end of the test name
         item._nodeid = f"{item.nodeid} \033[93m[{', '.join(markers)}]\033[0m"
+
+
+import random
+from collections import defaultdict
+
+def pytest_collection_modifyitems(config, items):
+    random.seed(config.getoption("--randomly-seed", default=0))
+
+    buckets = defaultdict(list)
+    for item in items:
+        buckets[item.fspath].append(item)
+
+    shuffled = []
+    files = list(buckets.keys())
+    random.shuffle(files)
+
+    while files:
+        for f in files[:]:
+            if buckets[f]:
+                shuffled.append(buckets[f].pop(0))
+            else:
+                files.remove(f)
+
+    items[:] = shuffled
