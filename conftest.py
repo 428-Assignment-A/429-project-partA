@@ -12,7 +12,7 @@ def pytest_sessionstart(session):
     """
     try:
         # Check /todos as it's a lightweight core endpoint
-        requests.get(f"{BASE_URL}/todos", timeout=2)
+        requests.get(f"{BASE_URL}/gui", timeout=2)
         print(f"\n[CONFIRMED] API Server is running at {BASE_URL}")
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         print(f"\n[ERROR] API Server is NOT running at {BASE_URL}")
@@ -113,3 +113,15 @@ def pytest_collection_modifyitems(config, items):
                 files.remove(f)
 
     items[:] = shuffled
+
+
+
+@pytest.fixture(autouse=True)
+def ensure_server_alive():
+    """Verify that the API server is running before each test; abort all tests if down."""
+    try:
+        resp = requests.get(f"{BASE_URL}/gui", timeout=2)
+        if resp.status_code >= 500:
+            pytest.exit(f"API Server returned {resp.status_code} at {BASE_URL}.", returncode=1)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        pytest.exit(f"API server connection cannot be established at {BASE_URL}.", returncode=1)
