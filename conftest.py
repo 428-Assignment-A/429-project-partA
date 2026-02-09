@@ -66,3 +66,26 @@ def cleanup(api):
         todos = todos_resp.json().get("todos", [])
         for item in todos:
             api.delete(f"/todos/{item['id']}")
+
+
+def pytest_report_teststatus(report, config):
+    """
+    This hook runs when a test finishes. 
+    It modifies the terminal output to include the markers.
+    """
+    if report.when == 'call':
+        # Get the markers from the test item
+        # Note: This requires a slightly more complex approach if 
+        # using 'report', but for a simple print, we use item collected.
+        pass
+
+def pytest_itemcollected(item):
+    """
+    This modifies the 'Node ID' (the name in the terminal) 
+    to include markers as soon as the test is found.
+    """
+    # Get all custom marker names
+    markers = [mark.name for mark in item.iter_markers()]
+    if markers:
+        # Appends [marker1, marker2] to the end of the test name
+        item._nodeid = f"{item.nodeid} \033[93m[{', '.join(markers)}]\033[0m"
