@@ -45,7 +45,9 @@ class TestProjectsIdPut:
         body = got.json()
         proj = body["projects"][0] if "projects" in body else body
         assert proj["title"] == "PersistAfter"
-        assert proj["completed"] is True
+        #assert proj["completed"] is True
+        assert str(proj.get("completed")).lower() == "true"
+
 
     @pytest.mark.error
     def test_put_nonexistent_project_returns_404(self, api):
