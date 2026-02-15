@@ -13,6 +13,9 @@ Tests:
 5. Verify JSON response format
 6. Verify no unintended side effects
 7. Document if method is allowed or not
+8. Test malformed JSON - missing id field
+9. Test malformed JSON - extra random field
+10. Test malformed JSON - invalid data type
 """
 
 import pytest
@@ -120,3 +123,34 @@ class TestProjectsIdCategoriesPut:
         else:
             # Document the actual behavior
             assert resp.status_code in [200, 201, 400, 404]
+    
+    @pytest.mark.error
+    def test_malformed_json_missing_id_field(self, api):
+        """Verify PUT /projects/:id/categories handles missing id field."""
+        project = api.post("/projects", json={"title": "TestProject"}).json()["id"]
+        
+        # Missing required "id" field in body
+        resp = api.put(f"/projects/{project}/categories", json={})
+        # Should return 400 or 405 (method not allowed)
+        assert resp.status_code in [400, 405]
+    
+    @pytest.mark.error
+    def test_malformed_json_extra_random_field(self, api):
+        """Verify PUT /projects/:id/categories handles extra fields appropriately."""
+        project = api.post("/projects", json={"title": "TestProject"}).json()["id"]
+        category = api.post("/categories", json={"title": "TestCategory"}).json()["id"]
+        
+        # Extra random field that's not in API specification
+        resp = api.put(f"/projects/{project}/categories", json={"id": category, "randomField": "unexpected", "anotherField": 123})
+        # API should either ignore extra fields, reject them (400), or return 405
+        assert resp.status_code in [200, 201, 400, 405]
+    
+    @pytest.mark.error
+    def test_malformed_json_invalid_data_type(self, api):
+        """Verify PUT /projects/:id/categories handles invalid data types."""
+        project = api.post("/projects", json={"title": "TestProject"}).json()["id"]
+        
+        # Invalid data type - sending number instead of string for id
+        resp = api.put(f"/projects/{project}/categories", json={"id": 12345})
+        # Should handle gracefully with 400, 404, or 405
+        assert resp.status_code in [200, 201, 400, 404, 405]
