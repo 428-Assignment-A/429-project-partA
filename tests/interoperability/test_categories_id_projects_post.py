@@ -144,6 +144,4 @@ class TestCategoriesIdProjectsPost:
         resp = api.post(f"/categories/{category}/projects", json={"id": 12345})
         # Should handle gracefully with 400 or might auto-convert
         assert resp.status_code in [200, 201, 400, 404]
-```
 
----
