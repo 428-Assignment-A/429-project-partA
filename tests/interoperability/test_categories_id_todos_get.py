@@ -52,9 +52,15 @@ class TestCategoriesIdTodosGet:
         todos = resp.json().get("todos", [])
         assert len(todos) == 0
     
+    @pytest.mark.bug
+    @pytest.mark.xfail(reason="Bug: GET endpoint returns 200 OK instead of 404 for non-existent category ID")
     @pytest.mark.error
     def test_get_todos_nonexistent_category_returns_404(self, api):
-        """Verify GET /categories/:id/todos returns 404 for unknown category."""
+        """Verify GET /categories/:id/todos returns 404 for unknown category.
+        
+        Expected: 404 Not Found
+        Actual: 200 OK with empty list
+        """
         resp = api.get("/categories/999999/todos")
         assert resp.status_code == 404
     
