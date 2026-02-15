@@ -14,7 +14,7 @@ Tests:
 5. Create duplicate relationship (should succeed)
 6. Verify JSON response format
 7. Verify no side effects on todo or project data
-8. Test malformed JSON - missing id field
+8. Test malformed JSON - missing id field - BUG
 9. Test malformed JSON - extra random field
 10. Test malformed JSON - invalid data type
 """
@@ -110,9 +110,15 @@ class TestTodosIdTasksofPost:
         assert original_todo["title"] == after_todo["title"]
         assert original_project["title"] == after_project["title"]
     
+    @pytest.mark.bug
+    @pytest.mark.xfail(reason="Bug: API accepts empty body and returns 201 instead of 400")
     @pytest.mark.error
     def test_malformed_json_missing_id_field(self, api):
-        """Verify POST /todos/:id/tasksof returns 400 when id field is missing."""
+        """Verify POST /todos/:id/tasksof returns 400 when id field is missing.
+        
+        Expected: 400 Bad Request
+        Actual: 201 Created (accepts empty body)
+        """
         todo = api.post("/todos", json={"title": "TestTodo"}).json()["id"]
         
         # Missing required "id" field in body
