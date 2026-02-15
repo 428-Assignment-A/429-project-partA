@@ -8,7 +8,7 @@ Documented behavior:
 Tests:
 1. Get projects for category with relationships (200)
 2. Get projects for category with no relationships (200, empty list)
-3. Get projects for non-existent category (404)
+3. Get projects for non-existent category (404) - BUG
 4. Verify JSON response format
 5. Verify XML response format
 6. Verify no side effects (GET doesn't modify data)
@@ -52,9 +52,15 @@ class TestCategoriesIdProjectsGet:
         projects = resp.json().get("projects", [])
         assert len(projects) == 0
     
+    @pytest.mark.bug
+    @pytest.mark.xfail(reason="Bug: GET endpoint returns 200 OK instead of 404 for non-existent category ID")
     @pytest.mark.error
     def test_get_projects_nonexistent_category_returns_404(self, api):
-        """Verify GET /categories/:id/projects returns 404 for unknown category."""
+        """Verify GET /categories/:id/projects returns 404 for unknown category.
+        
+        Expected: 404 Not Found
+        Actual: 200 OK with empty list
+        """
         resp = api.get("/categories/999999/projects")
         assert resp.status_code == 404
     
