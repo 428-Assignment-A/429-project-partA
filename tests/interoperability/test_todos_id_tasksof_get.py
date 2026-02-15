@@ -8,7 +8,7 @@ Documented behavior:
 Tests:
 1. Get projects for todo with relationships (200)
 2. Get projects for todo with no relationships (200, empty list)
-3. Get projects for non-existent todo (404)
+3. Get projects for non-existent todo (404) - BUG
 4. Verify JSON response format
 5. Verify XML response format
 6. Verify no side effects (GET doesn't modify data)
@@ -52,9 +52,15 @@ class TestTodosIdTasksofGet:
         projects = resp.json().get("projects", [])
         assert len(projects) == 0
     
+    @pytest.mark.bug
+    @pytest.mark.xfail(reason="Bug: GET endpoint returns 200 OK instead of 404 for non-existent todo ID")
     @pytest.mark.error
     def test_get_projects_nonexistent_todo_returns_404(self, api):
-        """Verify GET /todos/:id/tasksof returns 404 for unknown todo."""
+        """Verify GET /todos/:id/tasksof returns 404 for unknown todo.
+        
+        Expected: 404 Not Found
+        Actual: 200 OK with empty list
+        """
         resp = api.get("/todos/999999/tasksof")
         assert resp.status_code == 404
     
