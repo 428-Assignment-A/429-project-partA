@@ -13,6 +13,9 @@ Tests:
 5. Create duplicate relationship (should succeed or return existing)
 6. Verify JSON response format
 7. Verify no side effects on todo or category data
+8. Test malformed JSON - missing id field
+9. Test malformed JSON - extra random field
+10. Test malformed JSON - invalid data type
 """
 
 import pytest
@@ -115,3 +118,33 @@ class TestTodosIdCategoriesPost:
         assert original_todo["description"] == after_todo["description"]
         assert original_category["title"] == after_category["title"]
         assert original_category["description"] == after_category["description"]
+    
+    @pytest.mark.error
+    def test_malformed_json_missing_id_field(self, api):
+        """Verify POST /todos/:id/categories returns 400 when id field is missing."""
+        todo = api.post("/todos", json={"title": "TestTodo"}).json()["id"]
+        
+        # Missing required "id" field in body
+        resp = api.post(f"/todos/{todo}/categories", json={})
+        assert resp.status_code == 400
+    
+    @pytest.mark.error
+    def test_malformed_json_extra_random_field(self, api):
+        """Verify POST /todos/:id/categories handles extra fields appropriately."""
+        todo = api.post("/todos", json={"title": "TestTodo"}).json()["id"]
+        category = api.post("/categories", json={"title": "TestCategory"}).json()["id"]
+        
+        # Extra random field that's not in API specification
+        resp = api.post(f"/todos/{todo}/categories", json={"id": category, "randomField": "unexpected", "anotherField": 123})
+        # API should either ignore extra fields (201) or reject them (400)
+        assert resp.status_code in [200, 201, 400]
+    
+    @pytest.mark.error
+    def test_malformed_json_invalid_data_type(self, api):
+        """Verify POST /todos/:id/categories handles invalid data types."""
+        todo = api.post("/todos", json={"title": "TestTodo"}).json()["id"]
+        
+        # Invalid data type - sending number instead of string for id
+        resp = api.post(f"/todos/{todo}/categories", json={"id": 12345})
+        # Should handle gracefully with 400 or might auto-convert
+        assert resp.status_code in [200, 201, 400, 404]
