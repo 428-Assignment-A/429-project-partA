@@ -155,8 +155,8 @@ def put_project_full(api, context, title, description, active, completed):
     context.response = api.put(f"/projects/{context.project_id}", json={
         "title": title,
         "description": description,
-        "active": active,
-        "completed": completed,
+        "active": active == "true",     
+        "completed": completed == "true",  
     })
  
  
