@@ -1,3 +1,4 @@
+import json
 import pytest
 import xml.etree.ElementTree as ET
 from pytest_bdd import scenarios, given, when, then, parsers
@@ -35,7 +36,7 @@ def clear_system(api):
         api.delete(f"/categories/{c['id']}")
 
 
-@given(parsers.parse('a category is created with title "{title}" and description "{description}" and its ID is captured'))
+@given(parsers.parse('a category is created with title "{title}", description "{description}", and its ID is captured'))
 def create_category_with_desc_and_capture(api, context, title, description):
     resp = api.post("/categories", json={"title": title, "description": description})
     assert resp.status_code == 201, f"Failed to create category: {resp.text}"
@@ -93,7 +94,7 @@ def post_with_title_and_desc(api, context, endpoint, title, description):
     context.response = api.post(endpoint, json={"title": title, "description": description})
 
 
-@when(parsers.parse('I POST to "{endpoint}" with title "{title}"'))
+@when(parsers.re(r'I POST to "(?P<endpoint>[^"]+)" with title "(?P<title>[^"]*)"'))
 def post_with_title_only(api, context, endpoint, title):
     context.response = api.post(endpoint, json={"title": title})
 
@@ -105,7 +106,7 @@ def post_with_format(api, context, endpoint, format, title):
         payload = f"<category><title>{title}</title></category>"
         context.response = api.post(endpoint, data=payload, headers=headers)
     else:
-        context.response = api.post(endpoint, json={"title": title}, headers=headers)
+        context.response = api.post(endpoint, data=json.dumps({"title": title}), headers=headers)
 
 
 @when("I GET the captured category ID")

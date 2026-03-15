@@ -2,7 +2,7 @@ Feature: Retrieve Categories
   As a user, I want to retrieve category details so that I can view task type information for my courses accurately.
 
   Background:
-    Given a category is created with title "Assignment" and description "Tasks for course assignments" and its ID is captured
+    Given a category is created with title "Assignment", description "Tasks for course assignments", and its ID is captured
 
   # NORMAL FLOW
   Scenario Outline: Retrieve a specific category by ID and verify its fields
