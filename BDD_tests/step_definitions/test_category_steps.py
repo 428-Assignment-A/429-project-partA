@@ -1,3 +1,4 @@
+import json
 import pytest
 import xml.etree.ElementTree as ET
 from pytest_bdd import scenarios, given, when, then, parsers
@@ -33,6 +34,14 @@ def clear_system(api):
     categories = api.get("/categories").json().get("categories", [])
     for c in categories:
         api.delete(f"/categories/{c['id']}")
+
+
+@given(parsers.parse('a category is created with title "{title}", description "{description}", and its ID is captured'))
+def create_category_with_desc_and_capture(api, context, title, description):
+    resp = api.post("/categories", json={"title": title, "description": description})
+    assert resp.status_code == 201, f"Failed to create category: {resp.text}"
+    context.captured_category_id = resp.json().get("id")
+    context.captured_id = context.captured_category_id
 
 
 @given(parsers.parse('a category is created with title "{title}" and its ID is captured'))
@@ -85,7 +94,7 @@ def post_with_title_and_desc(api, context, endpoint, title, description):
     context.response = api.post(endpoint, json={"title": title, "description": description})
 
 
-@when(parsers.parse('I POST to "{endpoint}" with title "{title}"'))
+@when(parsers.re(r'I POST to "(?P<endpoint>[^"]+)" with title "(?P<title>[^"]*)"'))
 def post_with_title_only(api, context, endpoint, title):
     context.response = api.post(endpoint, json={"title": title})
 
@@ -97,12 +106,27 @@ def post_with_format(api, context, endpoint, format, title):
         payload = f"<category><title>{title}</title></category>"
         context.response = api.post(endpoint, data=payload, headers=headers)
     else:
-        context.response = api.post(endpoint, json={"title": title}, headers=headers)
+        context.response = api.post(endpoint, data=json.dumps({"title": title}), headers=headers)
+
+
+@when("I GET the captured category ID")
+def get_captured_category(api, context):
+    context.response = api.get(f"/categories/{context.captured_category_id}")
 
 
 @when(parsers.parse('I GET "{url}"'))
 def get_url(api, context, url):
     context.response = api.get(url)
+
+
+@when("I HEAD the captured category ID")
+def head_captured_category(api, context):
+    context.response = api.head(f"/categories/{context.captured_category_id}")
+
+
+@when(parsers.parse('I HEAD "{url}"'))
+def head_url(api, context, url):
+    context.response = api.head(url)
 
 
 @when(parsers.parse('I GET "{url}" with Accept header "{format}"'))
@@ -186,6 +210,20 @@ def check_status(context, status):
 @then(parsers.parse('the response body should contain title "{title}"'))
 def check_body_title(context, title):
     assert context.response.json().get("title") == title
+
+
+@then(parsers.parse('the response should contain field "{field}" with value "{value}"'))
+def check_response_field(context, field, value):
+    data = context.response.json()
+    categories = data.get("categories", [data])
+    item = categories[0] if categories else data
+    assert str(item.get(field)) == value, f"Expected {field}='{value}', got '{item.get(field)}'"
+
+
+@then("the response body should be empty")
+def check_body_empty(context):
+    assert context.response.text.strip() == "", \
+        f"Expected empty body but got: {context.response.text[:100]}"
 
 
 @then(parsers.parse('the "{header_name}" header should contain "{format}"'))
