@@ -3,7 +3,7 @@ import requests
 from pytest_bdd import scenarios, given, when, then, parsers
 
 # Load all scenarios from the features directory
-scenarios('../features')
+scenarios('../features/todo')
 
 @pytest.fixture
 def context():
