@@ -12,6 +12,9 @@ def context():
         def __init__(self):
             self.response = None
             self.captured_id = None
+            self.captured_category_id = None
+            self.captured_todo_id = None
+            self.captured_project_id = None
     return State()
 
 # ==========================================
@@ -29,6 +32,10 @@ def clear_data(api):
     todos = api.get_todos().json().get("todos", [])
     for t in todos:
         api.delete_todo(t['id'])
+    # Also clear all categories
+    categories = api.get("/categories").json().get("categories", [])
+    for c in categories:
+        api.delete(f"/categories/{c['id']}")
 
 @given(parsers.parse('a todo is created with title "{title}"'))
 def create_todo_with_title(api, context, title):
