@@ -12,10 +12,10 @@ Feature: Create Categories
     And the new category ID should be stored for subsequent steps
 
     Examples:
-      | title       | description                  |
-      | Work        | Tasks related to work        |
-      | Personal    | Personal errands and goals   |
-      | School!@#   | Special character title      |
+      | title        | description                         |
+      | Assignment   | Tasks for course assignments        |
+      | Exam         | Upcoming exams and quizzes          |
+      | Reading!@#   | Special character category title    |
 
   # ALTERNATE FLOW
   Scenario Outline: Create a category using different content types
@@ -24,9 +24,9 @@ Feature: Create Categories
     And the "Content-Type" header should contain "<format>"
 
     Examples:
-      | format           | title          |
-      | application/json | JSON Category  |
-      | application/xml  | XML Category   |
+      | format           | title               |
+      | application/json | Assignment Category |
+      | application/xml  | Exam Category       |
 
   # ERROR FLOW
   Scenario Outline: Attempt to create a category with a missing or empty title

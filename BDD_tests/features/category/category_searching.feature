@@ -3,8 +3,8 @@ Feature: Search and Filter Categories
 
   Background:
     Given the system is cleared
-    And a category exists with title "Health" and description "Wellness related tasks"
-    And a category exists with title "Finance" and description "Budget and expenses"
+    And a category exists with title "Assignment" and description "Tasks for course assignments"
+    And a category exists with title "Exam" and description "Upcoming exams and quizzes"
 
   # NORMAL FLOW
   Scenario Outline: Filter categories by title
@@ -13,9 +13,9 @@ Feature: Search and Filter Categories
     And the number of category items returned should be <count>
 
     Examples:
-      | query    | count |
-      | Health   | 1     |
-      | Finance  | 1     |
+      | query      | count |
+      | Assignment | 1     |
+      | Exam       | 1     |
 
   # ALTERNATE FLOW
   Scenario Outline: Retrieve all categories and confirm response format

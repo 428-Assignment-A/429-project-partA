@@ -2,7 +2,7 @@ Feature: Delete Categories
   As a user, I want to delete categories I no longer need so that my workspace stays clean and uncluttered.
 
   Background:
-    Given a category is created with title "Temporary" and its ID is captured
+    Given a category is created with title "Old Assignment" and its ID is captured
 
   # NORMAL FLOW
   Scenario: Delete an existing category

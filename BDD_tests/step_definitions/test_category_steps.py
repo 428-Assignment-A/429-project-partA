@@ -1,11 +1,39 @@
 import pytest
 import xml.etree.ElementTree as ET
-from pytest_bdd import given, when, then, parsers
+from pytest_bdd import scenarios, given, when, then, parsers
+
+# Load all scenarios from the category features directory
+scenarios('../features/category')
+
+
+@pytest.fixture
+def context():
+    """State object to share data (like dynamic IDs) between steps."""
+    class State:
+        def __init__(self):
+            self.response = None
+            self.captured_id = None
+            self.captured_category_id = None
+            self.captured_todo_id = None
+            self.captured_project_id = None
+    return State()
 
 
 # ==========================================
 # GIVEN STEPS (Backgrounds)
 # ==========================================
+
+@given("the todo manager service is running")
+def service_running():
+    pass
+
+
+@given("the system is cleared")
+def clear_system(api):
+    categories = api.get("/categories").json().get("categories", [])
+    for c in categories:
+        api.delete(f"/categories/{c['id']}")
+
 
 @given(parsers.parse('a category is created with title "{title}" and its ID is captured'))
 def create_category_and_capture(api, context, title):
@@ -52,9 +80,34 @@ def create_project_and_capture(api, context, title):
 # WHEN STEPS (Actions)
 # ==========================================
 
+@when(parsers.parse('I POST to "{endpoint}" with title "{title}" and description "{description}"'))
+def post_with_title_and_desc(api, context, endpoint, title, description):
+    context.response = api.post(endpoint, json={"title": title, "description": description})
+
+
 @when(parsers.parse('I POST to "{endpoint}" with title "{title}"'))
 def post_with_title_only(api, context, endpoint, title):
     context.response = api.post(endpoint, json={"title": title})
+
+
+@when(parsers.parse('I POST to "{endpoint}" in "{format}" with title "{title}"'))
+def post_with_format(api, context, endpoint, format, title):
+    headers = {"Content-Type": format, "Accept": format}
+    if "xml" in format:
+        payload = f"<category><title>{title}</title></category>"
+        context.response = api.post(endpoint, data=payload, headers=headers)
+    else:
+        context.response = api.post(endpoint, json={"title": title}, headers=headers)
+
+
+@when(parsers.parse('I GET "{url}"'))
+def get_url(api, context, url):
+    context.response = api.get(url)
+
+
+@when(parsers.parse('I GET "{url}" with Accept header "{format}"'))
+def get_with_accept_format(api, context, url, format):
+    context.response = api.get(url, headers={"Accept": format})
 
 
 @when("I DELETE the captured category ID")
@@ -100,11 +153,6 @@ def post_category_with_new_id(api, context, new_id):
     )
 
 
-@when(parsers.parse('I GET "{url}" with Accept header "{format}"'))
-def get_with_accept_format(api, context, url, format):
-    context.response = api.get(url, headers={"Accept": format})
-
-
 @when(parsers.parse('I POST to "/categories/{category_ref}/todos" with the captured todo ID'))
 def post_category_todo_link(api, context, category_ref):
     cat_id = context.captured_category_id if category_ref == "CAPTURED_ID" else category_ref
@@ -128,6 +176,30 @@ def post_category_invalid_link(api, context, endpoint, invalid_id):
 # ==========================================
 # THEN STEPS (Assertions)
 # ==========================================
+
+@then(parsers.parse('the response status should be "{status}"'))
+def check_status(context, status):
+    assert str(context.response.status_code) == status, \
+        f"Expected {status}, got {context.response.status_code}: {context.response.text}"
+
+
+@then(parsers.parse('the response body should contain title "{title}"'))
+def check_body_title(context, title):
+    assert context.response.json().get("title") == title
+
+
+@then(parsers.parse('the "{header_name}" header should contain "{format}"'))
+def check_header(context, header_name, format):
+    actual = context.response.headers.get(header_name, "").lower()
+    assert format.lower() in actual, f"Expected '{format}' in header '{header_name}', got '{actual}'"
+
+
+@then(parsers.parse('the error message should be "{msg}"'))
+def check_error_message(context, msg):
+    errors = context.response.json().get("errorMessages", [])
+    assert any(msg in error for error in errors), \
+        f"Expected '{msg}' in error messages: {errors}"
+
 
 @then("the new category ID should be stored for subsequent steps")
 def store_new_category_id(context):

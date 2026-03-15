@@ -2,9 +2,9 @@ Feature: Manage Category Relationships
   As a user, I want to link categories to todos and projects so that I can organize my work under meaningful themes.
 
   Background:
-    Given a category is created with title "Linked Category" and its ID is captured
-    And a todo is created with title "Related Todo" and its ID is captured
-    And a project is created with title "Related Project" and its ID is captured
+    Given a category is created with title "Assignment" and its ID is captured
+    And a todo is created with title "Midterm Review" and its ID is captured
+    And a project is created with title "Study Plan" and its ID is captured
 
   # NORMAL FLOW
   Scenario Outline: Link a category to a todo and verify the relationship

@@ -2,7 +2,7 @@ Feature: Update Categories
   As a user, I want to update category details so that my categories stay accurate and relevant over time.
 
   Background:
-    Given a category is created with title "Original Title"
+    Given a category is created with title "Assignment"
     And I capture its dynamic category ID
 
   # NORMAL FLOW
@@ -12,9 +12,9 @@ Feature: Update Categories
     And the category should have "<field>" set to "<value>"
 
     Examples:
-      | field       | value                 |
-      | title       | Updated Title         |
-      | description | New description text  |
+      | field       | value                        |
+      | title       | Exam                         |
+      | description | Covers lectures 1 through 5  |
 
   # ALTERNATE FLOW
   Scenario Outline: Replace a category entirely using PUT
@@ -23,9 +23,9 @@ Feature: Update Categories
     And the category should match the title "<title>"
 
     Examples:
-      | title       | description          |
-      | Replaced A  | Full replacement one |
-      | Replaced B  | Full replacement two |
+      | title    | description                     |
+      | Reading  | Weekly reading assignments      |
+      | Exam     | Midterm and final exam category |
 
   # ERROR FLOW
   Scenario Outline: Attempt to modify the immutable ID field of a category
