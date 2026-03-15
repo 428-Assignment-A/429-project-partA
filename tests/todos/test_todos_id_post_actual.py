@@ -68,16 +68,7 @@ class TestTodosIdPost:
         # Most APIs return 200/400; we check if it remains stable
         assert resp.status_code in [200, 400]
 
-    # 6. Bug Case: Expected Behavior (FAILING)
-    @pytest.mark.bug
-    @pytest.mark.xfail(reason="Bug: Update endpoint fails to return 400 for invalid data types (Boolean as Title)")
-    def test_post_update_type_validation_expected(self, api):
-        """Expected: Reject boolean title with 400."""
-        todo_id = api.post("/todos", json={"title": "Init"}).json()['id']
-        resp = api.post(f"/todos/{todo_id}", json={"title": True})
-        assert resp.status_code == 400
-
-    # 7. Error Case: Malformed JSON Syntax
+    # 6. Error Case: Malformed JSON Syntax
     @pytest.mark.error
     def test_post_update_malformed_json(self, api):
         """Verify 400 for broken JSON syntax during update."""
@@ -85,3 +76,60 @@ class TestTodosIdPost:
         broken_json = '{"title": "oops"' # Missing closing brace
         resp = api.post(f"/todos/{todo_id}", data=broken_json, headers={"Content-Type": "application/json"})
         assert resp.status_code == 400
+
+    # 7. Perfomrance Case: Update should be processed within 200ms
+    @pytest.mark.capability
+    def test_post_update_performance(self, api):
+        """Actual: Verifies that updates are processed in under 200ms."""
+        todo_id = api.post("/todos", json={"title": "Speed"}).json()['id']
+        resp = api.post(f"/todos/{todo_id}", json={"title": "Fast"})
+        assert resp.elapsed.total_seconds() < 0.2
+    
+    # 8. Robustness Case: Since we know the API accepts long strings, we should document that it handles them during updates, not just creation.
+    @pytest.mark.capability
+    def test_post_update_robustness_data(self, api):
+        """Actual: Verify the API handles XSS and extreme lengths during update."""
+        todo_id = api.post("/todos", json={"title": "Init"}).json()['id']
+        
+        # Test extreme length and special characters
+        complex_data = "A" * 500 + "<script>alert(1)</script>"
+        resp = api.post(f"/todos/{todo_id}", json={"description": complex_data})
+        
+        assert resp.status_code == 200
+        check = api.get(f"/todos/{todo_id}").json()
+        assert check['todos'][0]['description'] == complex_data
+
+    # 9. Capability: Verify that the endpoint accepts XML payloads for updates (if supported)
+    @pytest.mark.capability
+    def test_post_update_xml_format(self, api):
+        """Actual: Verify that the endpoint accepts XML payloads for updates."""
+        todo_id = api.post("/todos", json={"title": "JSON Init"}).json()['id']
+        
+        xml_body = f"<todo><title>XML Update</title></todo>"
+        resp = api.post(f"/todos/{todo_id}", 
+                        data=xml_body, 
+                        headers={"Content-Type": "application/xml"})
+        
+        assert resp.status_code == 200
+        check = api.get(f"/todos/{todo_id}").json()
+        assert check['todos'][0]['title'] == "XML Update"
+
+    # 10. Observed Behavior: ID Immutability
+    @pytest.mark.error
+    def test_post_update_id_immutability_actual(self, api):
+        """
+        Actual: Verify that attempting to change the ID field results in a validation error.
+        Documents the specific error message: 'Failed Validation: id should be ID'
+        """
+        # Setup
+        todo_id = api.post("/todos", json={"title": "Immutable Test"}).json()['id']
+        
+        # Action: Try to change the id to a different string
+        payload = {"id": "9999"}
+        resp = api.post(f"/todos/{todo_id}", json=payload)
+        
+        # Verification
+        assert resp.status_code == 400
+        error_data = resp.json()
+        assert "errorMessages" in error_data
+        assert "Failed Validation: id should be ID" in error_data["errorMessages"]

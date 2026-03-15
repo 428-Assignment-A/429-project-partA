@@ -105,4 +105,4 @@ class TestTodosGet:
         """Verify behavior when Accept header is nonsense."""
         resp = api.get("/todos", headers={"Accept": "not-a-real-format"})
         # Usually results in 406 Not Acceptable or defaults to JSON
-        assert resp.status_code in [200, 406]
+        assert resp.status_code in [406]

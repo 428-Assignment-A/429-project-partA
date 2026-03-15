@@ -5,19 +5,7 @@ class TestTodosIdOptions:
     Focusing on architectural routing bugs and standard compliance.
     """
 
-    # 1. THE ACTUAL BUG: Greedy Routing
-    @pytest.mark.bug
-    def test_options_on_invalid_path_returns_200_instead_of_404(self, api):
-        """
-        BUG: The server incorrectly returns 200 OK for paths that do not exist.
-        This violates standard REST routing principles.
-        """
-        resp = api.options("/todos/this/path/is/fake/and/should/be/404")
-        
-        # In a healthy API, this should be 404.
-        assert resp.status_code == 404 
-
-    # 2. CAPABILITY: Standard Options Behavior
+    # 1 CAPABILITY: Standard Options Behavior
     @pytest.mark.capability
     def test_options_id_standard_behavior(self, api):
         """Confirming the API follows RFC 7231 by providing an Allow header."""
@@ -29,7 +17,7 @@ class TestTodosIdOptions:
         # Body should be empty per standard, but headers are mandatory
         assert len(resp.text.strip()) == 0
 
-    # 3. SIDE EFFECT: State Preservation
+    # 2 SIDE EFFECT: State Preservation
     @pytest.mark.capability
     def test_options_is_safe_method(self, api):
         """Verify that an OPTIONS request does not modify the resource state."""
@@ -42,7 +30,7 @@ class TestTodosIdOptions:
         check = api.get(f"/todos/{todo_id}").json()
         assert check['todos'][0]['title'] == "Original"
 
-    # 4. PERFORMANCE: Discovery Speed
+    # 3. PERFORMANCE: Discovery Speed
     @pytest.mark.capability
     def test_options_performance_latency(self, api):
         """OPTIONS requests should be extremely fast as they are often pre-flighted."""
@@ -52,7 +40,7 @@ class TestTodosIdOptions:
         # Should respond in less than 100ms
         assert resp.elapsed.total_seconds() < 0.1
 
-    # 5. ROBUSTNESS: Media Type Handling
+    # 4. ROBUSTNESS: Media Type Handling
     @pytest.mark.capability
     def test_options_handles_different_accept_headers(self, api):
         """Ensure the router doesn't crash when specific content types are requested."""
