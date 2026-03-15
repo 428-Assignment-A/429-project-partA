@@ -37,7 +37,7 @@ Feature: Delete a Course Project
 
     # ERROR FLOW
     Scenario Outline: Fail to delete a project with a non-existent ID
-        When I DELETE "/projects/<id>"
+        When I DELETE "/projects/{id}"
         Then the response status should be "404"
 
         Examples:

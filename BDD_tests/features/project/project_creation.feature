@@ -24,7 +24,7 @@ Feature: Create Projects
     Scenario Outline: Create a project with only a title
         When I POST to "/projects" with title "<title>"
         Then the response status should be "201"
-        And the response should contain project title "<title>
+        And the response should contain project title "<title>"
 
         Examples:
             | title    |

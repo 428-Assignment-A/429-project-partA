@@ -51,9 +51,9 @@ def clear_system(api):
 @given(parsers.parse('a project exists with title "{title}" and description "{description}" and active "{active}"'))
 def project_exists_full(api, context, title, description, active):
     resp = api.post("/projects", json={
-        "title": title,
-        "description": description,
-        "active": active,
+    "title": title,
+    "description": description,         
+    "active": active == "true",
     })
     assert resp.status_code == 201
     context.project_id = resp.json()["id"]
@@ -101,7 +101,7 @@ def post_project_full(api, context, endpoint, title, description, active):
     context.response = api.post(endpoint, json={
         "title": title,
         "description": description,
-        "active": active,
+        "active": active == "true",
     })
  
  
@@ -145,7 +145,7 @@ def delete_project_by_stored_project_id(api, context):
     context.response = api.delete(f"/projects/{context.project_id}")
  
  
-@when(parsers.parse('I DELETE "/projects/<id>"'))
+@when(parsers.parse('I DELETE "/projects/{id}"'))
 def delete_project_by_id(api, context, id):
     context.response = api.delete(f"/projects/{id}")
  
