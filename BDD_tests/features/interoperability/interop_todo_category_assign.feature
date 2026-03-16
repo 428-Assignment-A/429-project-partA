@@ -1,33 +1,33 @@
-Feature: Assign Categories to Todos
-  As a user, I want to assign a category to a todo so that I can group related tasks by topic or theme.
+Feature: Assign Categories to Projects
+  As a user, I want to assign a category to a project so that I can classify my course projects by type or theme.
 
   Background:
     Given the todo manager service is running
     And the system is cleared
-    And a todo is created with title "Review Lecture Notes"
-    And I capture its dynamic ID
-    And a category is created with title "Exam" and its ID is captured
+    And a project exists with title "MATH 240" and description "Discrete Mathematics" and active "true"
+    And I store the id of the created project
+    And a category is created with title "Assignment" and its ID is captured
 
   # NORMAL FLOW
-  Scenario: Assign a category to a todo
-    Given the category is linked to the todo
-    When I GET "/todos/{stored_todo_id}/categories"
+  Scenario: Assign a category to a project
+    Given the category is linked to the project
+    When I GET "/projects/{stored_project_id}/categories"
     Then the response status should be "200"
-    And a GET request to "/todos/{stored_todo_id}/categories" should return the linked category
+    And a GET request to "/projects/{stored_project_id}/categories" should return the linked category
 
   # ALTERNATE FLOW
-  Scenario: Retrieve categories of a todo after linking
-    Given the category is linked to the todo
-    When I GET "/todos/{stored_todo_id}/categories"
+  Scenario: Retrieve all categories linked to a project
+    Given the category is linked to the project
+    When I GET "/projects/{stored_project_id}/categories"
     Then the response status should be "200"
-    And the response should contain the category title "Exam"
+    And the response should contain the category title "Assignment"
 
   # ERROR FLOW
-  Scenario Outline: Attempt to assign a non-existent category to a todo
-    When I POST to "/todos/{stored_todo_id}/categories" with category ID "<invalid_id>"
+  Scenario Outline: Attempt to assign a category to a non-existent project
+    When I POST to "/projects/<invalid_project_id>/categories" with category ID stored_category_id
     Then the response status should be "404"
     And the response body should contain an error message
     Examples:
-      | invalid_id |
-      | 999999     |
-      | 0          |
+      | invalid_project_id |
+      | 999999             |
+      | 0                  |
