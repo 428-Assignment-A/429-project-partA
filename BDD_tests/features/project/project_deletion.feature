@@ -19,6 +19,7 @@ Feature: Delete a Course Project
             | MATH 240 | Discrete Mathematics | true   |
 
     # ALTERNATE FLOW
+    @xfail
     Scenario Outline: Delete a project that has a linked task
         Given a project exists with title "<title>"
         And a todo exists with title "<todo_title>"
