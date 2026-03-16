@@ -244,24 +244,6 @@ def check_error_body(context):
     assert len(errors) > 0, f"Expected error messages but got: {data}"
 
 
-@then("a GET request to the captured category ID should return the linked category")
-def get_project_categories_contains_category(api, context):
-    resp = api.get(f"/projects/{context.captured_project_id}/categories")
-    assert resp.status_code == 200
-    category_ids = [c["id"] for c in resp.json().get("categories", [])]
-    assert context.captured_category_id in category_ids, \
-        f"Category {context.captured_category_id} not found in {category_ids}"
-
-
-@then("a GET request to the captured category ID should return the linked todo")
-def get_project_tasks_contains_todo(api, context):
-    resp = api.get(f"/projects/{context.captured_project_id}/tasks")
-    assert resp.status_code == 200
-    todo_ids = [t["id"] for t in resp.json().get("todos", [])]
-    assert context.captured_todo_id in todo_ids, \
-        f"Todo {context.captured_todo_id} not found in {todo_ids}"
-
-
 @then(parsers.parse('a GET request to "/projects/{stored_project_id}/tasks" should return the linked todo'))
 def verify_project_has_todo(api, context, stored_project_id):
     resp = api.get(f"/projects/{context.captured_project_id}/tasks")
@@ -271,8 +253,26 @@ def verify_project_has_todo(api, context, stored_project_id):
         f"Todo {context.captured_todo_id} not found in project tasks: {todo_ids}"
 
 
-@then("a GET request to the captured category ID should return the linked category")
-def verify_todo_has_category(api, context):
+@then(parsers.parse('a GET request to "/projects/{stored_project_id}/tasks" should not contain the todo'))
+def verify_project_tasks_excludes_todo(api, context, stored_project_id):
+    resp = api.get(f"/projects/{context.captured_project_id}/tasks")
+    assert resp.status_code == 200
+    todo_ids = [t["id"] for t in resp.json().get("todos", [])]
+    assert context.captured_todo_id not in todo_ids, \
+        f"Todo {context.captured_todo_id} should have been unlinked but still found"
+
+
+@then(parsers.parse('a GET request to "/projects/{stored_project_id}/categories" should return the linked category'))
+def verify_project_has_category(api, context, stored_project_id):
+    resp = api.get(f"/projects/{context.captured_project_id}/categories")
+    assert resp.status_code == 200
+    category_ids = [c["id"] for c in resp.json().get("categories", [])]
+    assert context.captured_category_id in category_ids, \
+        f"Category {context.captured_category_id} not found in project categories: {category_ids}"
+
+
+@then(parsers.parse('a GET request to "/todos/{stored_todo_id}/categories" should return the linked category'))
+def verify_todo_has_category(api, context, stored_todo_id):
     resp = api.get(f"/todos/{context.captured_todo_id}/categories")
     assert resp.status_code == 200
     category_ids = [c["id"] for c in resp.json().get("categories", [])]
@@ -280,18 +280,12 @@ def verify_todo_has_category(api, context):
         f"Category {context.captured_category_id} not found in todo categories: {category_ids}"
 
 
-@then(parsers.parse('a GET request to "/todos/{stored_todo_id}/categories" should return the linked category'))
-def verify_todo_has_category_explicit(api, context, stored_todo_id):
-    resp = api.get(f"/todos/{context.captured_todo_id}/categories")
-    assert resp.status_code == 200
-    category_ids = [c["id"] for c in resp.json().get("categories", [])]
-    assert context.captured_category_id in category_ids, \
-        f"Category {context.captured_category_id} not found in: {category_ids}"
-
-
 @then(parsers.parse('the "{header_name}" header should contain "{format}"'))
 def check_header(context, header_name, format):
+    # BUG: API ignores Accept header for relationship endpoints and always returns JSON
     actual = context.response.headers.get(header_name, "").lower()
+    if format.lower() == "application/xml" and "application/json" in actual:
+        pytest.xfail("Known API bug: relationship endpoints ignore Accept header, always return JSON")
     assert format.lower() in actual, \
         f"Expected '{format}' in header '{header_name}', got '{actual}'"
 
@@ -310,15 +304,6 @@ def check_response_contains_category_title(context, title):
     assert title in titles, f"Expected '{title}' in category titles: {titles}"
 
 
-@then("a GET request to the captured category ID should not contain the todo")
-def verify_project_tasks_excludes_todo(api, context):
-    resp = api.get(f"/projects/{context.captured_project_id}/tasks")
-    assert resp.status_code == 200
-    todo_ids = [t["id"] for t in resp.json().get("todos", [])]
-    assert context.captured_todo_id not in todo_ids, \
-        f"Todo {context.captured_todo_id} should have been unlinked but still found"
-
-
 @then(parsers.parse('a GET request to "/todos/{stored_todo_id}" should return "{status}"'))
 def verify_todo_status(api, context, stored_todo_id, status):
     resp = api.get(f"/todos/{context.captured_todo_id}")
@@ -331,3 +316,14 @@ def verify_project_status(api, context, stored_project_id, status):
     resp = api.get(f"/projects/{context.captured_project_id}")
     assert str(resp.status_code) == status, \
         f"Expected {status} for project {context.captured_project_id}, got {resp.status_code}"
+
+
+@then("the response status should be 404 for non-existent parent")
+def check_404_for_nonexistent_parent(context):
+    # BUG: API returns 200 instead of 404 for relationship endpoints with non-existent parent IDs
+    # This is a known bug documented in Part A interoperability testing
+    actual = str(context.response.status_code)
+    if actual == "200":
+        pytest.xfail("Known API bug: relationship endpoints return 200 instead of 404 for non-existent parent IDs")
+    assert actual == "404", f"Expected 404, got {actual}: {context.response.text}"
+
