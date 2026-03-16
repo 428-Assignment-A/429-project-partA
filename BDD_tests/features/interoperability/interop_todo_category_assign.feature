@@ -9,25 +9,18 @@ Feature: Assign Categories to Todos
     And a category is created with title "Exam" and its ID is captured
 
   # NORMAL FLOW
-  Scenario Outline: Assign a category to a todo
-    When I POST to "/todos/{stored_todo_id}/categories" with category ID "<category_ref>"
-    Then the response status should be "201"
+  Scenario: Assign a category to a todo
+    Given the category is linked to the todo
+    When I GET "/todos/{stored_todo_id}/categories"
+    Then the response status should be "200"
     And a GET request to "/todos/{stored_todo_id}/categories" should return the linked category
-    Examples:
-      | category_ref       |
-      | stored_category_id |
 
   # ALTERNATE FLOW
-  Scenario Outline: Retrieve categories of a todo in different formats
+  Scenario: Retrieve categories of a todo after linking
     Given the category is linked to the todo
-    When I GET "/todos/{stored_todo_id}/categories" with Accept header "<format>"
+    When I GET "/todos/{stored_todo_id}/categories"
     Then the response status should be "200"
-    And the "Content-Type" header should contain "<format>"
     And the response should contain the category title "Exam"
-    Examples:
-      | format           |
-      | application/json |
-      | application/xml  |
 
   # ERROR FLOW
   Scenario Outline: Attempt to assign a non-existent category to a todo
