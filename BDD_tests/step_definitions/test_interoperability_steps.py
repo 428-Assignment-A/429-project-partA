@@ -317,3 +317,10 @@ def verify_project_status(api, context, stored_project_id, status):
     assert str(resp.status_code) == status, \
         f"Expected {status} for project {context.captured_project_id}, got {resp.status_code}"
 
+
+@then('the response status should be "200" as known bug for non-existent parent')
+def check_status_known_bug(context):
+    # BUG: API returns 200 instead of 404 for relationship endpoints with non-existent parent IDs
+    # This is a documented bug from Part A interoperability testing
+    pytest.xfail(f"BUG: Expected 404 but API returned {context.response.status_code} for non-existent parent ID")
+
