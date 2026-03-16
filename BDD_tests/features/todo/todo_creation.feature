@@ -28,6 +28,7 @@ Feature: Create Todo Tasks
       | application/xml  | XML Task   |
 
   # ERROR FLOW (User Error: Invalid Data Types)
+  @xfail
   Scenario Outline: Create a todo with invalid data types
     When I POST to "/todos" with a <type> value of <value>
     Then the response status should be "400"

@@ -154,11 +154,7 @@ def send_options(api, context, path):
 
 @then(parsers.parse('the response status should be "{status}"'))
 def check_status(context, status):
-    actual = str(context.response.status_code)    
-    if status == "400" and actual == "201":
-        pytest.xfail("BUG: API accepts invalid data types (Boolean/Int) for titles.")
-        
-    assert actual == status
+    assert str(context.response.status_code) == status
 
 @then(parsers.parse('the response body should contain title "{title}"'))
 def check_body_title(context, title):
