@@ -22,7 +22,7 @@ Feature: Unlink Todos from Projects
     Then the response status should be "200"
     And a GET request to "/todos/{stored_todo_id}" should return "200"
 
-  # ERROR FLOW
+  # ERROR FLOW - Known Bug: API returns 200 instead of 404 for invalid IDs
   Scenario Outline: Attempt to unlink a todo from a project using an invalid ID
     When I DELETE "/projects/<project_id>/tasks/<todo_id>"
     Then the response status should be "404"
