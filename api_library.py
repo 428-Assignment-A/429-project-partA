@@ -68,3 +68,61 @@ class TodoAPI:
 
     def get_projects(self) -> requests.Response:
         return self._make_request("GET", "/projects")
+    
+class ProjectAPI:
+    """
+    Clean Code wrapper for Project-related REST API calls.
+    Returns full requests.Response objects to allow BDD steps to verify
+    status codes, headers, and body content.
+    """
+ 
+    def __init__(self, base_url: str = "http://localhost:4567"):
+        self.base_url = base_url.rstrip('/')
+        self.session = requests.Session()
+ 
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
+        """Internal helper to execute requests."""
+        url = f"{self.base_url}{endpoint}"
+        return self.session.request(method, url, **kwargs)
+ 
+    # --- Collection Methods ---
+ 
+    def get_projects(self, params: Optional[Dict] = None) -> requests.Response:
+        """GET /projects - supports filtering via params (e.g. {'title': 'my project'})"""
+        return self._make_request("GET", "/projects", params=params)
+ 
+    def create_project(self, payload: Dict[str, Any], content_type: str = "application/json") -> requests.Response:
+        """POST /projects - Create a new project with flexible payload and headers."""
+        headers = {"Content-Type": content_type}
+ 
+        if content_type == "application/xml" and isinstance(payload, str):
+            return self._make_request("POST", "/projects", data=payload, headers=headers)
+        return self._make_request("POST", "/projects", json=payload, headers=headers)
+ 
+    def options_projects(self, endpoint: str = "/projects") -> requests.Response:
+        """OPTIONS request for discovery testing."""
+        return self._make_request("OPTIONS", endpoint)
+ 
+    def head_projects(self, endpoint: str = "/projects") -> requests.Response:
+        """HEAD request for metadata testing."""
+        return self._make_request("HEAD", endpoint)
+ 
+    # --- Instance Methods (:id) ---
+ 
+    def get_project(self, project_id: Union[int, str], accept: str = "application/json") -> requests.Response:
+        """GET /projects/:id - Supports custom Accept headers for format testing."""
+        headers = {"Accept": accept}
+        return self._make_request("GET", f"/projects/{project_id}", headers=headers)
+ 
+    def update_project_post(self, project_id: Union[int, str], payload: Dict) -> requests.Response:
+        """POST /projects/:id - Partial update."""
+        return self._make_request("POST", f"/projects/{project_id}", json=payload)
+ 
+    def update_project_put(self, project_id: Union[int, str], payload: Dict) -> requests.Response:
+        """PUT /projects/:id - Full replacement."""
+        return self._make_request("PUT", f"/projects/{project_id}", json=payload)
+ 
+    def delete_project(self, project_id: Union[int, str], accept: str = "application/json") -> requests.Response:
+        """DELETE /projects/:id"""
+        headers = {"Accept": accept}
+        return self._make_request("DELETE", f"/projects/{project_id}", headers=headers)
