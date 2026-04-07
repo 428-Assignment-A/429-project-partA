@@ -11,7 +11,7 @@ class BasePerformanceTester:
         self.target_process = self._find_process(jar_name)
         if self.target_process:
             print(
-                f"🎯 Targeted monitoring active for PID: {self.target_process.pid}")
+                f"Targeted monitoring active for PID: {self.target_process.pid}")
 
     def _find_process(self, name):
         for proc in psutil.process_iter(['pid', 'name', 'cmdline']):

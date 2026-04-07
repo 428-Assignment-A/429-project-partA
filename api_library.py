@@ -126,3 +126,61 @@ class ProjectAPI:
         """DELETE /projects/:id"""
         headers = {"Accept": accept}
         return self._make_request("DELETE", f"/projects/{project_id}", headers=headers)
+
+
+class CategoryAPI:
+    """
+    Clean Code wrapper for Category-related REST API calls.
+    Returns full requests.Response objects to allow BDD steps to verify
+    status codes, headers, and body content.
+    """
+
+    def __init__(self, base_url: str = "http://localhost:4567"):
+        self.base_url = base_url.rstrip('/')
+        self.session = requests.Session()
+
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
+        """Internal helper to execute requests."""
+        url = f"{self.base_url}{endpoint}"
+        return self.session.request(method, url, **kwargs)
+
+    # --- Collection Methods ---
+
+    def get_categories(self, params: Optional[Dict] = None) -> requests.Response:
+        """GET /categories - supports filtering via params (e.g. {'title': 'work'})"""
+        return self._make_request("GET", "/categories", params=params)
+
+    def create_category(self, payload: Dict[str, Any], content_type: str = "application/json") -> requests.Response:
+        """POST /categories - Create a new category with flexible payload and headers."""
+        headers = {"Content-Type": content_type}
+        if content_type == "application/xml" and isinstance(payload, str):
+            return self._make_request("POST", "/categories", data=payload, headers=headers)
+        return self._make_request("POST", "/categories", json=payload, headers=headers)
+
+    def options_categories(self, endpoint: str = "/categories") -> requests.Response:
+        """OPTIONS request for discovery testing."""
+        return self._make_request("OPTIONS", endpoint)
+
+    def head_categories(self, endpoint: str = "/categories") -> requests.Response:
+        """HEAD request for metadata testing."""
+        return self._make_request("HEAD", endpoint)
+
+    # --- Instance Methods (:id) ---
+
+    def get_category(self, category_id: Union[int, str], accept: str = "application/json") -> requests.Response:
+        """GET /categories/:id - Supports custom Accept headers for format testing."""
+        headers = {"Accept": accept}
+        return self._make_request("GET", f"/categories/{category_id}", headers=headers)
+
+    def update_category_post(self, category_id: Union[int, str], payload: Dict) -> requests.Response:
+        """POST /categories/:id - Partial update."""
+        return self._make_request("POST", f"/categories/{category_id}", json=payload)
+
+    def update_category_put(self, category_id: Union[int, str], payload: Dict) -> requests.Response:
+        """PUT /categories/:id - Full replacement."""
+        return self._make_request("PUT", f"/categories/{category_id}", json=payload)
+
+    def delete_category(self, category_id: Union[int, str], accept: str = "application/json") -> requests.Response:
+        """DELETE /categories/:id"""
+        headers = {"Accept": accept}
+        return self._make_request("DELETE", f"/categories/{category_id}", headers=headers)
