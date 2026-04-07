@@ -15,7 +15,7 @@ def pytest_runtest_setup(item):
     try:
         requests.get(f"{BASE_URL}/todos", timeout=2)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-        pytest.exit("API Server is not running. Terminating tests.", returncode=1)
+        pytest.exit("API Server is not running. Cannot run remaining tests.", returncode=1)
 
 
 @pytest.hookimpl(hookwrapper=True)
