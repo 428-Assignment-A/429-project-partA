@@ -2,7 +2,7 @@ import random
 import string
 import time
 from api_library import TodoAPI, ProjectAPI
-from performance_general import BasePerformanceTester
+from performance_tests.performance_general import BasePerformanceTester
 
 
 class InteroperabilityPerformanceTester(BasePerformanceTester):
